@@ -15,29 +15,49 @@ public:
 
 private:
     bool Deserialize(void);
+    bool Validate(void);
     std::uint32_t Serialize(void);
 
-    std::uint16_t LitteToBigEndian(const std::uint16_t * buffer);
+    std::uint16_t LittleToBigEndian(const std::uint16_t * buffer);
     std::uint32_t LittleToBigEndian(const std::uint32_t * buffer);
+
+    // Wave structure fields
+    struct WavHeader_s
+    {
+        char            RIFF[4];
+        std::uint32_t   mChunkSize;
+        char            WAVE[4];
+    }; // WavHeader_s
+
+    struct SubChunk1_s
+    {
+        char            mSubchunk1Id[4];
+        std::uint16_t   mSubchunk1Size;
+        std::uint16_t   mAudioFormat;
+        std::uint16_t   mNumChannels;
+        std::uint32_t   mSampleRate;
+        std::uint32_t   mByteRate;
+        std::uint16_t   mBlockAlign;
+        std::uint16_t   mBitsPerSample;
+    }; // SubChunk1
+
+    struct SubChunk2_s
+    {
+        char            DATA[4];
+        std::uint32_t   mSubchunk2Size;
+
+#warning NEED TO IMPLEMENT DATA
+
+    }; // SubChunk2
 
     std::ifstream   mInputFileStream;
     std::uint8_t*   mWavFileBuffer;
     std::uint32_t   mBufferOffset;
 
-    // Wave structure fields
-	// Chunk 1
-    std::uint32_t mChunkSize;		// 32 + subChunk2Size
-	// Subchunk 1 size
-    std::uint32_t mSubchunk1Size;	// 16 for PCM
-    std::uint16_t mAudioFormat;		// PCM = 1, Anything else has compression
-    std::uint16_t mNumberOfChannels;	// 1 = mono, 2 = stereo, etc...
-    std::uint32_t mSampleRate;		// Common values: 8000, 44100
-    std::uint32_t mByteRate;		// = SampleRate * NumChannels * BitsPerSample / 8;
-    std::uint32_t mBlockAlign;		// = NumChannels * BitsPerSample / 8
-    std::uint16_t mBitsPerSample;	
-	// Subchunk 2 size
-    std::uint32_t mSubchunk2Size;	// = NumSamples * NumChannels * BitsPerSample / 8
-    
+    WavHeader_s mWaveHeader;
+    SubChunk1_s mSubchunk1;
+    SubChunk2_s mSubchunk2;
+
     static const std::uint16_t UPPER_EIGHT_BITS_MASK;
     static const std::uint16_t LOWER_EIGHT_BITS_MASK;
     static const std::uint32_t FIRST_BYTE_INT_32;
@@ -48,6 +68,9 @@ private:
     static const std::uint16_t ONE_BYTE_SHIFT;
     static const std::uint16_t TWO_BYTE_SHIFT;
     static const std::uint16_t THREE_BYTE_SHIFT;
+
+    static const std::uint16_t FOUR_BYTES;
+    static const std::uint16_t TWO_BYTES;
 }; // WavReader
 
 #endif /* WAV_READER_HPP */
