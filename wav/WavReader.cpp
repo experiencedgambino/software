@@ -27,7 +27,30 @@ WavReader::~WavReader()
 {
 } // ~WavReader
 
-bool WavReader::LoadWavFile(const std::string & wavfileName)
+bool WavReader::Read(const std::string & wavfileName)
+{
+    bool return_value = true;
+    std::uint32_t length_of_file;
+    mInputFileStream.open(wavfileName);
+    if (mInputFileStream.is_open() == true)
+    {
+        // Move to the end of the file to get length
+        mInputFileStream.seekg(0, std::ios::end);
+        length_of_file = mInputFileStream.tellg();
+        // Return to beginning of file to read
+        mInputFileStream.seekg(0, std::ios::beg);
+        mWavFileBuffer = static_cast<uint8_t *>(malloc(length_of_file));
+        mInputFileStream.read(reinterpret_cast<char *>(mWavFileBuffer), length_of_file);
+    } // else
+    mInputFileStream.close();
+
+    // Deserialize wav file
+    return_value = Deserialize();
+    
+    return return_value;
+} // WavReader
+
+bool WavReader::Write(const std::string & wavfileName)
 {
     bool return_value = true;
     std::uint32_t length_of_file;
@@ -87,9 +110,6 @@ bool WavReader::Deserialize(void)
     mSubchunk2.mSubchunk2Size = LittleToBigEndian((std::uint32_t *) mWavFileBuffer+mBufferOffset);
     mBufferOffset+=FOUR_BYTES;
 
-    
-
-     
     return false;
 } // Deserialize
 

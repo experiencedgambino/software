@@ -11,7 +11,8 @@ public:
     WavReader();
     ~WavReader();
 
-    bool LoadWavFile(const std::string & wavString);
+    bool Read(const std::string & wavString);
+    bool Write(const std::string & wavString);
 
 private:
     bool Deserialize(void);
