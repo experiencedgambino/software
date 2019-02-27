@@ -14,6 +14,12 @@ public:
     bool Read(const std::string & wavString);
     bool Write(const std::string & wavString);
 
+    enum Channel_e : std::uint16_t
+    {
+        CHANNEL_ONE,
+        CHANNEL_TWO
+    }; // Channel_e
+
 private:
     bool Deserialize(void);
     bool Validate(void);
@@ -21,6 +27,9 @@ private:
 
     std::uint16_t LittleToBigEndian(const std::uint16_t * buffer);
     std::uint32_t LittleToBigEndian(const std::uint32_t * buffer);
+
+    std::uint16_t GetSample(std::uint32_t sampleNumber, WavReader::Channel_e channel);
+    std::uint16_t GetSample(std::uint32_t sampleNumber); // Retreive channel 1 sample
 
     // Wave structure fields
     struct WavHeader_s
@@ -46,9 +55,7 @@ private:
     {
         char            DATA[4];
         std::uint32_t   mSubchunk2Size;
-
-#warning NEED TO IMPLEMENT DATA
-
+        std::uint8_t*   mData;
     }; // SubChunk2
 
     std::ifstream   mInputFileStream;
@@ -72,6 +79,9 @@ private:
 
     static const std::uint16_t FOUR_BYTES;
     static const std::uint16_t TWO_BYTES;
+
+    static const std::uint16_t SIXTEEN_BITS_PER_SAMPLE = 16;
+    static const std::uint16_t EIGHT_BITS_PER_SAMPLE = 8;
 }; // WavReader
 
 #endif /* WAV_READER_HPP */

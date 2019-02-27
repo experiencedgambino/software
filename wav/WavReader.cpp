@@ -109,6 +109,7 @@ bool WavReader::Deserialize(void)
     mBufferOffset+=FOUR_BYTES;
     mSubchunk2.mSubchunk2Size = LittleToBigEndian((std::uint32_t *) mWavFileBuffer+mBufferOffset);
     mBufferOffset+=FOUR_BYTES;
+    std::memcpy( mSubchunk2.mData, mWavFileBuffer+mBufferOffset, mSubchunk2.mSubchunk2Size);
 
     return false;
 } // Deserialize
@@ -129,5 +130,27 @@ std::uint32_t WavReader::LittleToBigEndian(const std::uint32_t * buffer)
            ((buffer[0] << ONE_BYTE_SHIFT)   & THIRD_BYTE_INT_32)   &
 	       ((buffer[0])			            & FOURTH_BYTE_INT_32);
 } // LittleToBigEndian
+
+std::uint16_t WavReader::GetSample(std::uint32_t sampleNumber, WavReader::Channel_e channel)
+{
+    if (mSubchunk1.mBitsPerSample == SIXTEEN_BITS_PER_SAMPLE)
+    {
+        return static_cast<std::uint16_t>(reinterpret_cast<std::uint16_t *>(mSubchunk2.mData)[sampleNumber*mSubchunk1.mNumChannels+channel]);
+    } // if
+    else if (mSubchunk1.mBitsPerSample == EIGHT_BITS_PER_SAMPLE)
+    {
+        return static_cast<std::uint16_t>(reinterpret_cast<std::uint8_t *>(mSubchunk2.mData)[sampleNumber*mSubchunk1.mNumChannels+channel]);
+    } // else if
+    else
+    {
+        return 0;
+    } // else
+
+} // GetSample
+
+std::uint16_t WavReader::GetSample(std::uint32_t sampleNumber)
+{
+    return GetSample(sampleNumber, WavReader::Channel_e::CHANNEL_ONE); // Get channel 1 sample
+} // GetSample
 
 
