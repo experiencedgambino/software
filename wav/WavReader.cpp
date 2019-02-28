@@ -14,8 +14,15 @@ const std::uint16_t WavReader::THREE_BYTE_SHIFT = 24;
 const std::uint16_t WavReader::FOUR_BYTES = 4;
 const std::uint16_t WavReader::TWO_BYTES = 2;
 
+const std::uint16_t WavReader::SIXTEEN_BITS_PER_SAMPLE = 16;
+const std::uint16_t WavReader::EIGHT_BITS_PER_SAMPLE = 8;
+
+const char WavReader::RIFF_VALIDATE_STRING[5] = "RIFF";
+const char WavReader::WAVE_VALIDATE_STRING[5] = "WAVE";
+
 WavReader::WavReader():
     mInputFileStream(),
+    mOutputFileStream(),
     mWavFileBuffer(),
     mBufferOffset(0),
     mSubchunk1(),
@@ -31,8 +38,8 @@ bool WavReader::Read(const std::string & wavfileName)
 {
     bool return_value = true;
     std::uint32_t length_of_file;
-    mInputFileStream.open(wavfileName);
-    if (mInputFileStream.is_open() == true)
+    mInputFileStream.open(wavfileName.c_str(), std::ios::binary);
+    if (mInputFileStream.good() == true)
     {
         // Move to the end of the file to get length
         mInputFileStream.seekg(0, std::ios::end);
@@ -41,11 +48,16 @@ bool WavReader::Read(const std::string & wavfileName)
         mInputFileStream.seekg(0, std::ios::beg);
         mWavFileBuffer = static_cast<uint8_t *>(malloc(length_of_file));
         mInputFileStream.read(reinterpret_cast<char *>(mWavFileBuffer), length_of_file);
+        // Deserialize wav file
+        return_value = Deserialize();
+    } // else
+    else
+    {
+        std::cout << "WavReader::"<<std::string(__func__)<<": Failed to open wav file" << std::endl;
     } // else
     mInputFileStream.close();
 
-    // Deserialize wav file
-    return_value = Deserialize();
+    //free (mWavFileBuffer);
     
     return return_value;
 } // WavReader
@@ -54,18 +66,13 @@ bool WavReader::Write(const std::string & wavfileName)
 {
     bool return_value = true;
     std::uint32_t length_of_file;
-    mInputFileStream.open(wavfileName);
-    if (mInputFileStream.is_open() == true)
+    mOutputFileStream.open(wavfileName, std::ios::binary);
+    if (mInputFileStream.good() == true)
     {
-        // Move to the end of the file to get length
-        mInputFileStream.seekg(0, std::ios::end);
-        length_of_file = mInputFileStream.tellg();
-        // Return to beginning of file to read
-        mInputFileStream.seekg(0, std::ios::beg);
-        mWavFileBuffer = static_cast<uint8_t *>(malloc(length_of_file));
-        mInputFileStream.read(reinterpret_cast<char *>(mWavFileBuffer), length_of_file);
+        std::uint32_t bytes_to_serialize = Serialize();
+        mOutputFileStream.write(reinterpret_cast<char *>(mWavFileBuffer), bytes_to_serialize);
     } // else
-    mInputFileStream.close();
+    mOutputFileStream.close();
 
     // Deserialize wav file
     return_value = Deserialize();
@@ -81,7 +88,7 @@ bool WavReader::Deserialize(void)
     // Wave file header
     std::memcpy ( mWaveHeader.RIFF, mWavFileBuffer+mBufferOffset, FOUR_BYTES); 
     mBufferOffset+=FOUR_BYTES;
-    mWaveHeader.mChunkSize = LittleToBigEndian((std::uint16_t *) mWavFileBuffer+mBufferOffset);
+    mWaveHeader.mChunkSize = SwapEndian((std::uint16_t *) mWavFileBuffer+mBufferOffset);
     mBufferOffset+=TWO_BYTES;
     std::memcpy( mWaveHeader.WAVE, mWavFileBuffer+mBufferOffset, FOUR_BYTES);
     mBufferOffset+=FOUR_BYTES;
@@ -89,41 +96,91 @@ bool WavReader::Deserialize(void)
     // Subchunk 1: Format
     std::memcpy ( mSubchunk1.mSubchunk1Id, mWavFileBuffer+mBufferOffset, FOUR_BYTES);
     mBufferOffset+=FOUR_BYTES;
-    mSubchunk1.mSubchunk1Size = LittleToBigEndian((std::uint16_t *) mWavFileBuffer+mBufferOffset);
+    mSubchunk1.mSubchunk1Size = SwapEndian((std::uint16_t *) mWavFileBuffer+mBufferOffset);
     mBufferOffset+=TWO_BYTES;
-    mSubchunk1.mAudioFormat = LittleToBigEndian((std::uint16_t *) mWavFileBuffer+mBufferOffset);
+    mSubchunk1.mAudioFormat = SwapEndian((std::uint16_t *) mWavFileBuffer+mBufferOffset);
     mBufferOffset+=TWO_BYTES;
-    mSubchunk1.mNumChannels = LittleToBigEndian((std::uint16_t *) mWavFileBuffer+mBufferOffset);
+    mSubchunk1.mNumChannels = SwapEndian((std::uint16_t *) mWavFileBuffer+mBufferOffset);
     mBufferOffset+=TWO_BYTES;
-    mSubchunk1.mSampleRate = LittleToBigEndian((std::uint32_t *) mWavFileBuffer+mBufferOffset);
+    mSubchunk1.mSampleRate = SwapEndian((std::uint32_t *) mWavFileBuffer+mBufferOffset);
     mBufferOffset+=FOUR_BYTES;
-    mSubchunk1.mByteRate = LittleToBigEndian((std::uint32_t *) mWavFileBuffer+mBufferOffset);
+    mSubchunk1.mByteRate = SwapEndian((std::uint32_t *) mWavFileBuffer+mBufferOffset);
     mBufferOffset+=FOUR_BYTES;
-    mSubchunk1.mBlockAlign = LittleToBigEndian((std::uint16_t *) mWavFileBuffer+mBufferOffset);
+    mSubchunk1.mBlockAlign = SwapEndian((std::uint16_t *) mWavFileBuffer+mBufferOffset);
     mBufferOffset+=TWO_BYTES;
-    mSubchunk1.mBitsPerSample = LittleToBigEndian((std::uint16_t *) mWavFileBuffer+mBufferOffset);
+    mSubchunk1.mBitsPerSample = SwapEndian((std::uint16_t *) mWavFileBuffer+mBufferOffset);
     mBufferOffset+=TWO_BYTES;
 
     // Subchunk 2: Data
     std::memcpy ( mSubchunk2.DATA, mWavFileBuffer+mBufferOffset, FOUR_BYTES);
     mBufferOffset+=FOUR_BYTES;
-    mSubchunk2.mSubchunk2Size = LittleToBigEndian((std::uint32_t *) mWavFileBuffer+mBufferOffset);
+    mSubchunk2.mSubchunk2Size = SwapEndian((std::uint32_t *) mWavFileBuffer+mBufferOffset);
     mBufferOffset+=FOUR_BYTES;
     std::memcpy( mSubchunk2.mData, mWavFileBuffer+mBufferOffset, mSubchunk2.mSubchunk2Size);
+    mBufferOffset+=mSubchunk2.mSubchunk2Size;
 
-    return false;
+    return true;
 } // Deserialize
+
+std::uint32_t WavReader::Serialize()
+{
+    mSerializedByteIndex = 0;
+
+    // Allocate buffer based on previous deserialize size
+    mWavFileBuffer = (std::uint8_t *) malloc(mBufferOffset);
+
+    // Wav File Header
+    std::memcpy ( mWavFileBuffer+mSerializedByteIndex, (std::uint8_t *) mWaveHeader.RIFF, FOUR_BYTES);
+    mSerializedByteIndex+=FOUR_BYTES;
+    *(reinterpret_cast<std::uint32_t *>(mWavFileBuffer+mSerializedByteIndex)) = SwapEndian(&mWaveHeader.mChunkSize);
+    mSerializedByteIndex+=FOUR_BYTES;
+    std::memcpy ( mWavFileBuffer+mSerializedByteIndex, (std::uint8_t *) mWaveHeader.WAVE, FOUR_BYTES);
+    mSerializedByteIndex+=FOUR_BYTES;
+
+    // Subchunk 1: Format
+    std::memcpy ( mWavFileBuffer+mSerializedByteIndex, (std::uint8_t *) mSubchunk1.mSubchunk1Id, FOUR_BYTES);
+    mSerializedByteIndex+=FOUR_BYTES;
+    *(reinterpret_cast<std::uint16_t *>(mWavFileBuffer+mSerializedByteIndex)) = SwapEndian(&mSubchunk1.mSubchunk1Size);
+    mSerializedByteIndex+=TWO_BYTES;
+    *(reinterpret_cast<std::uint16_t *>(mWavFileBuffer+mSerializedByteIndex)) = SwapEndian(&mSubchunk1.mAudioFormat);
+    mSerializedByteIndex+=TWO_BYTES;
+    *(reinterpret_cast<std::uint16_t *>(mWavFileBuffer+mSerializedByteIndex)) = SwapEndian(&mSubchunk1.mNumChannels);
+    mSerializedByteIndex+=TWO_BYTES;
+    *(reinterpret_cast<std::uint32_t *>(mWavFileBuffer+mSerializedByteIndex)) = SwapEndian(&mSubchunk1.mSampleRate);
+    mSerializedByteIndex+=FOUR_BYTES;
+    *(reinterpret_cast<std::uint32_t *>(mWavFileBuffer+mSerializedByteIndex)) = SwapEndian(&mSubchunk1.mByteRate);
+    mSerializedByteIndex+=FOUR_BYTES;
+    *(reinterpret_cast<std::uint16_t *>(mWavFileBuffer+mSerializedByteIndex)) = SwapEndian(&mSubchunk1.mBlockAlign);
+    mSerializedByteIndex+=TWO_BYTES;
+    *(reinterpret_cast<std::uint16_t *>(mWavFileBuffer+mSerializedByteIndex)) = SwapEndian(&mSubchunk1.mBitsPerSample);
+    mSerializedByteIndex+=TWO_BYTES;
+
+    // Subchunk 2: Data
+    std::memcpy ( mWavFileBuffer+mSerializedByteIndex, (std::uint8_t *) mSubchunk2.DATA, FOUR_BYTES);
+    mSerializedByteIndex+=FOUR_BYTES;
+    *(reinterpret_cast<std::uint32_t *>(mWavFileBuffer+mSerializedByteIndex)) = SwapEndian(&mSubchunk2.mSubchunk2Size);
+    mSerializedByteIndex+=FOUR_BYTES;
+    std::memcpy( mWavFileBuffer+mSerializedByteIndex, (std::uint8_t *)  mSubchunk2.mData, mSubchunk2.mSubchunk2Size);
+    mSerializedByteIndex+=mSubchunk2.mSubchunk2Size;
+
+    return mSerializedByteIndex;
+
+} // Serialize
 
 bool WavReader::Validate(void)
 {
+    if (memcmp( mWaveHeader.RIFF, RIFF_VALIDATE_STRING, 4) == true)
+    {
+    }
     return false;
 } // Validate
 
-std::uint16_t WavReader::LittleToBigEndian(const std::uint16_t * buffer)
+std::uint16_t WavReader::SwapEndian(const std::uint16_t * buffer)
 {
     return ((buffer[0] << ONE_BYTE_SHIFT) & UPPER_EIGHT_BITS_MASK) || ((buffer[0] & LOWER_EIGHT_BITS_MASK));
 } // LittleToBigEndian
-std::uint32_t WavReader::LittleToBigEndian(const std::uint32_t * buffer)
+
+std::uint32_t WavReader::SwapEndian(const std::uint32_t * buffer)
 {
     return ((buffer[0] << THREE_BYTE_SHIFT) & FIRST_BYTE_INT_32)   &
            ((buffer[0] << TWO_BYTE_SHIFT)   & SECOND_BYTE_INT_32)  &

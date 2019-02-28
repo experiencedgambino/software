@@ -8,3 +8,6 @@ add_library(utilities
 
 
 include_directories($Utilities_SOURCE_DIR/wav)
+
+add_executable(Test wav/WavReaderTest.cpp)
+target_link_libraries(Test utilities)

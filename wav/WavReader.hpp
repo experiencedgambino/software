@@ -2,6 +2,7 @@
 #define WAV_READER_HPP
 
 #include <cstdint>
+#include <iostream>
 #include <fstream>
 #include <string>
 
@@ -25,8 +26,8 @@ private:
     bool Validate(void);
     std::uint32_t Serialize(void);
 
-    std::uint16_t LittleToBigEndian(const std::uint16_t * buffer);
-    std::uint32_t LittleToBigEndian(const std::uint32_t * buffer);
+    std::uint16_t SwapEndian(const std::uint16_t * buffer);
+    std::uint32_t SwapEndian(const std::uint32_t * buffer);
 
     std::uint16_t GetSample(std::uint32_t sampleNumber, WavReader::Channel_e channel);
     std::uint16_t GetSample(std::uint32_t sampleNumber); // Retreive channel 1 sample
@@ -59,8 +60,10 @@ private:
     }; // SubChunk2
 
     std::ifstream   mInputFileStream;
+    std::ofstream   mOutputFileStream;
     std::uint8_t*   mWavFileBuffer;
     std::uint32_t   mBufferOffset;
+    std::uint32_t   mSerializedByteIndex;;
 
     WavHeader_s mWaveHeader;
     SubChunk1_s mSubchunk1;
@@ -80,8 +83,11 @@ private:
     static const std::uint16_t FOUR_BYTES;
     static const std::uint16_t TWO_BYTES;
 
-    static const std::uint16_t SIXTEEN_BITS_PER_SAMPLE = 16;
-    static const std::uint16_t EIGHT_BITS_PER_SAMPLE = 8;
+    static const std::uint16_t SIXTEEN_BITS_PER_SAMPLE;
+    static const std::uint16_t EIGHT_BITS_PER_SAMPLE;
+
+    static const char RIFF_VALIDATE_STRING[5];
+    static const char WAVE_VALIDATE_STRING[5];
 }; // WavReader
 
 #endif /* WAV_READER_HPP */
