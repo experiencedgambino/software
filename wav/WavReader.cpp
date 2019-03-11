@@ -30,6 +30,9 @@ WavReader::WavReader():
     mSubchunk1(),
     mSubchunk2()
 {
+    // Initialze buffers
+    mWavFileBuffer = (std::uint8_t *) malloc(1);
+    mSubchunk2.mData = (std::uint8_t *) malloc(1);
 } // WavReader
 
 WavReader::~WavReader()
@@ -48,6 +51,9 @@ bool WavReader::Read(const std::string & wavfileName)
         length_of_file = mInputFileStream.tellg();
         // Return to beginning of file to read
         mInputFileStream.seekg(0, std::ios::beg);
+
+        // Read the file into buffer
+        free(mWavFileBuffer);
         mWavFileBuffer = static_cast<uint8_t *>(malloc(length_of_file));
         mInputFileStream.read(reinterpret_cast<char *>(mWavFileBuffer), length_of_file);
         // Deserialize wav file
@@ -136,6 +142,7 @@ bool WavReader::Deserialize(void)
     mSubchunk2.mSubchunk2Size = *(reinterpret_cast<std::uint32_t *>(mWavFileBuffer+mBufferOffset));
     mBufferOffset+=FOUR_BYTES;
     // Allocate the data chunk
+    free(mSubchunk2.mData);
     mSubchunk2.mData = (std::uint8_t *) malloc (mSubchunk2.mSubchunk2Size * sizeof(std::uint8_t));
     std::memcpy( mSubchunk2.mData, mWavFileBuffer+mBufferOffset, mSubchunk2.mSubchunk2Size);
     mBufferOffset+=mSubchunk2.mSubchunk2Size;
