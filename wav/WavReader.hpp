@@ -14,6 +14,7 @@ public:
 
     bool Read(const std::string & wavString);
     bool Write(const std::string & wavString);
+    void GetStream(std::ostream & output);
 
     enum Channel_e : std::uint16_t
     {
@@ -26,8 +27,8 @@ private:
     bool Validate(void);
     std::uint32_t Serialize(void);
 
-    std::uint16_t SwapEndian(const std::uint16_t * buffer);
-    std::uint32_t SwapEndian(const std::uint32_t * buffer);
+    std::uint16_t SwapEndian(const std::uint16_t & num);
+    std::uint32_t SwapEndian(const std::uint32_t & num);
 
     std::uint16_t GetSample(std::uint32_t sampleNumber, WavReader::Channel_e channel);
     std::uint16_t GetSample(std::uint32_t sampleNumber); // Retreive channel 1 sample
@@ -88,6 +89,8 @@ private:
 
     static const char RIFF_VALIDATE_STRING[5];
     static const char WAVE_VALIDATE_STRING[5];
+    static const char DATA_VALIDATE_STRING[5];
+    static const char FORMAT_VALIDATE_STRING[5];
 }; // WavReader
 
 #endif /* WAV_READER_HPP */
