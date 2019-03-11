@@ -36,14 +36,14 @@ private:
     // Wave structure fields
     struct WavHeader_s
     {
-        char            RIFF[4];
+        char            RIFF[5];
         std::uint32_t   mChunkSize;
-        char            WAVE[4];
+        char            WAVE[5];
     }; // WavHeader_s
 
     struct SubChunk1_s
     {
-        char            mSubchunk1Id[4];
+        char            mSubchunk1Id[5];
         std::uint16_t   mSubchunk1Size;
         std::uint16_t   mAudioFormat;
         std::uint16_t   mNumChannels;
@@ -55,7 +55,7 @@ private:
 
     struct SubChunk2_s
     {
-        char            DATA[4];
+        char            DATA[5];
         std::uint32_t   mSubchunk2Size;
         std::uint8_t*   mData;
     }; // SubChunk2

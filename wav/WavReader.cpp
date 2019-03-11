@@ -89,7 +89,12 @@ void WavReader::GetStream(std::ostream & output)
     // Pipe all output to stream
     output << ".....Wavefile...." << std::endl;
     output << "RIFF: " << mWaveHeader.RIFF << std::endl;
+    output << "FMT des: " << mWaveHeader.WAVE << std::endl;
+    output << "Subchunk 1 ID: " << mSubchunk1.mSubchunk1Id << std::endl;
+    output << "Subchunk 2 ID: " << mSubchunk2.DATA << std::endl;
     output << "Format: " << mSubchunk1.mAudioFormat << std::endl;
+    output << "Num channels: " << mSubchunk1.mNumChannels << std::endl;
+    output << "BitsPerSample: " << mSubchunk1.mBitsPerSample << std::endl;
     return;
 } // GetStream
 
@@ -102,19 +107,19 @@ bool WavReader::Deserialize(void)
     // Wave file header
     std::memcpy ( mWaveHeader.RIFF, mWavFileBuffer+mBufferOffset, FOUR_BYTES); 
     mBufferOffset+=FOUR_BYTES;
-    mWaveHeader.mChunkSize = SwapEndian(*(reinterpret_cast<std::uint16_t *>(mWavFileBuffer+mBufferOffset)));
-    mBufferOffset+=TWO_BYTES;
+    mWaveHeader.mChunkSize = SwapEndian(*(reinterpret_cast<std::uint32_t *>(mWavFileBuffer+mBufferOffset)));
+    mBufferOffset+=FOUR_BYTES;
     std::memcpy( mWaveHeader.WAVE, mWavFileBuffer+mBufferOffset, FOUR_BYTES);
     mBufferOffset+=FOUR_BYTES;
 
     // Subchunk 1: Format
     std::memcpy ( mSubchunk1.mSubchunk1Id, mWavFileBuffer+mBufferOffset, FOUR_BYTES);
     mBufferOffset+=FOUR_BYTES;
-    mSubchunk1.mSubchunk1Size = SwapEndian(*(reinterpret_cast<std::uint16_t *>(mWavFileBuffer+mBufferOffset)));
-    mBufferOffset+=TWO_BYTES;
+    mSubchunk1.mSubchunk1Size = SwapEndian(*(reinterpret_cast<std::uint32_t *>(mWavFileBuffer+mBufferOffset)));
+    mBufferOffset+=FOUR_BYTES;
     mSubchunk1.mAudioFormat = SwapEndian(*(reinterpret_cast<std::uint16_t *>(mWavFileBuffer+mBufferOffset)));
     mBufferOffset+=TWO_BYTES;
-    mSubchunk1.mNumChannels = SwapEndian(*(reinterpret_cast<std::uint16_t *>(mWavFileBuffer+mBufferOffset)));
+    mSubchunk1.mNumChannels = *(reinterpret_cast<std::uint16_t *>(mWavFileBuffer+mBufferOffset));
     mBufferOffset+=TWO_BYTES;
     mSubchunk1.mSampleRate = SwapEndian(*(reinterpret_cast<std::uint32_t *>(mWavFileBuffer+mBufferOffset)));
     mBufferOffset+=FOUR_BYTES;
@@ -126,8 +131,8 @@ bool WavReader::Deserialize(void)
     mBufferOffset+=TWO_BYTES;
 
     // Subchunk 2: Data
-    //std::memcpy ( mSubchunk2.DATA, mWavFileBuffer+mBufferOffset, FOUR_BYTES);
-    //mBufferOffset+=FOUR_BYTES;
+    std::memcpy ( mSubchunk2.DATA, mWavFileBuffer+mBufferOffset, FOUR_BYTES);
+    mBufferOffset+=FOUR_BYTES;
     //mSubchunk2.mSubchunk2Size = SwapEndian(*(reinterpret_cast<std::uint32_t *>(mWavFileBuffer+mBufferOffset)));
     //std::cout <<  mSubchunk2.mSubchunk2Size << std::endl;
     //mBufferOffset+=FOUR_BYTES;
@@ -205,7 +210,7 @@ bool WavReader::Validate(void)
 
 std::uint16_t WavReader::SwapEndian(const std::uint16_t & num)
 {
-    return ((num << ONE_BYTE_SHIFT) & UPPER_EIGHT_BITS_MASK) | (num & LOWER_EIGHT_BITS_MASK);
+    return ((num << ONE_BYTE_SHIFT) & UPPER_EIGHT_BITS_MASK) | ((num >> ONE_BYTE_SHIFT) & LOWER_EIGHT_BITS_MASK);
 } // LittleToBigEndian
 
 std::uint32_t WavReader::SwapEndian(const std::uint32_t & num)
