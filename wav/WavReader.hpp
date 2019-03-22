@@ -14,13 +14,19 @@ public:
 
     bool Read(const std::string & wavString);
     bool Write(const std::string & wavString);
-    void GetStream(std::ostream & output);
-
+    void GetStream(std::ostream & output) const;
     enum Channel_e : std::uint16_t
     {
         CHANNEL_ONE,
         CHANNEL_TWO
     }; // Channel_e
+    std::int16_t GetSample(const std::uint32_t & sampleNumber, const WavReader::Channel_e & channel) const;
+    std::int16_t GetSample(const std::uint32_t & sampleNumber) const; // Retreive channel 1 sample
+    void SetSample(const std::uint32_t & sampleNumber, const WavReader::Channel_e & channel, const std::int16_t & value);
+    void SetSample(const std::uint32_t & sampleNumber, const std::int16_t & value);
+    std::uint32_t DataSize(void);
+
+
 
 private:
     bool Deserialize(void);
@@ -30,8 +36,7 @@ private:
     std::uint16_t SwapEndian(const std::uint16_t & num);
     std::uint32_t SwapEndian(const std::uint32_t & num);
 
-    std::uint16_t GetSample(std::uint32_t sampleNumber, WavReader::Channel_e channel);
-    std::uint16_t GetSample(std::uint32_t sampleNumber); // Retreive channel 1 sample
+
 
     // Wave structure fields
     struct WavHeader_s
@@ -85,12 +90,15 @@ private:
     static const std::uint16_t TWO_BYTES;
 
     static const std::uint16_t SIXTEEN_BITS_PER_SAMPLE;
+    static const std::uint16_t SIXTEEN_BITS_PER_SAMPLE_VALUE_OFFSET;
     static const std::uint16_t EIGHT_BITS_PER_SAMPLE;
 
     static const char RIFF_VALIDATE_STRING[5];
     static const char WAVE_VALIDATE_STRING[5];
     static const char DATA_VALIDATE_STRING[5];
     static const char FORMAT_VALIDATE_STRING[5];
+
+
 }; // WavReader
 
 #endif /* WAV_READER_HPP */

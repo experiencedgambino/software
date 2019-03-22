@@ -22,6 +22,8 @@ const char WavReader::WAVE_VALIDATE_STRING[5] = "WAVE";
 const char WavReader::DATA_VALIDATE_STRING[5] = "DATA";
 const char WavReader::FORMAT_VALIDATE_STRING[5] = "fmt ";
 
+const std::uint16_t WavReader::SIXTEEN_BITS_PER_SAMPLE_VALUE_OFFSET = 2;
+
 WavReader::WavReader():
     mInputFileStream(),
     mOutputFileStream(),
@@ -30,9 +32,6 @@ WavReader::WavReader():
     mSubchunk1(),
     mSubchunk2()
 {
-    // Initialze buffers
-    mWavFileBuffer = (std::uint8_t *) malloc(1);
-    mSubchunk2.mData = (std::uint8_t *) malloc(1);
 } // WavReader
 
 WavReader::~WavReader()
@@ -53,11 +52,11 @@ bool WavReader::Read(const std::string & wavfileName)
         mInputFileStream.seekg(0, std::ios::beg);
 
         // Read the file into buffer
-        free(mWavFileBuffer);
         mWavFileBuffer = static_cast<uint8_t *>(malloc(length_of_file));
         mInputFileStream.read(reinterpret_cast<char *>(mWavFileBuffer), length_of_file);
         // Deserialize wav file
         return_value = Deserialize();
+        free(mWavFileBuffer);
         // Deserialize wav file
         if (Validate() == false)
         {
@@ -70,8 +69,6 @@ bool WavReader::Read(const std::string & wavfileName)
     } // else
     mInputFileStream.close();
 
-    free (mWavFileBuffer);
-
     return return_value;
 } // WavReader
 
@@ -80,17 +77,18 @@ bool WavReader::Write(const std::string & wavfileName)
     bool return_value = true;
     std::uint32_t length_of_file;
     mOutputFileStream.open(wavfileName, std::ios::binary);
-    if (mInputFileStream.good() == true)
+    if (mOutputFileStream.good() == true)
     {
         std::uint32_t bytes_to_serialize = Serialize();
         mOutputFileStream.write(reinterpret_cast<char *>(mWavFileBuffer), bytes_to_serialize);
+        free(mWavFileBuffer);
     } // else
     mOutputFileStream.close();
 
     return return_value;
 } // WavReader
 
-void WavReader::GetStream(std::ostream & output)
+void WavReader::GetStream(std::ostream & output) const
 {
     // Pipe all output to stream
     output << ".....Wavefile...." << std::endl;
@@ -150,7 +148,7 @@ bool WavReader::Deserialize(void)
     return true;
 } // Deserialize
 
-std::uint32_t WavReader::Serialize()
+std::uint32_t WavReader::Serialize(void)
 {
     mSerializedByteIndex = 0;
 
@@ -229,23 +227,47 @@ std::uint32_t WavReader::SwapEndian(const std::uint32_t & num)
 	       ((num)			          & FOURTH_BYTE_INT_32);
 } // LittleToBigEndian
 
-std::uint16_t WavReader::GetSample(std::uint32_t sampleNumber, WavReader::Channel_e channel)
+std::int16_t WavReader::GetSample(const std::uint32_t & sampleNumber, const WavReader::Channel_e & channel) const
 {
     if (mSubchunk1.mBitsPerSample == SIXTEEN_BITS_PER_SAMPLE)
     {
-        return static_cast<std::uint16_t>(reinterpret_cast<std::uint16_t *>(mSubchunk2.mData)[sampleNumber*mSubchunk1.mNumChannels+channel]);
+        return *(reinterpret_cast<std::int16_t *>(
+                    mSubchunk2.mData + SIXTEEN_BITS_PER_SAMPLE_VALUE_OFFSET*(sampleNumber*mSubchunk1.mNumChannels+channel)
+                ));
     } // if
-    else if (mSubchunk1.mBitsPerSample == EIGHT_BITS_PER_SAMPLE)
-    {
-        return static_cast<std::uint16_t>(reinterpret_cast<std::uint8_t *>(mSubchunk2.mData)[sampleNumber*mSubchunk1.mNumChannels+channel]);
-    } // else if
     else
     {
         return 0;
     } // else
 } // GetSample
 
-std::uint16_t WavReader::GetSample(std::uint32_t sampleNumber)
+std::int16_t WavReader::GetSample(const std::uint32_t & sampleNumber) const
 {
     return GetSample(sampleNumber, WavReader::Channel_e::CHANNEL_ONE); // Get channel 1 sample
 } // GetSample
+
+void WavReader::SetSample(const std::uint32_t & sampleNumber, const WavReader::Channel_e & channel, const std::int16_t & value)
+{
+    *(reinterpret_cast<std::int16_t *>(
+        mSubchunk2.mData + SIXTEEN_BITS_PER_SAMPLE_VALUE_OFFSET*(sampleNumber*mSubchunk1.mNumChannels+channel)
+     )) = value;
+    return;
+} // SetSample
+
+void WavReader::SetSample(const std::uint32_t & sampleNumber, const std::int16_t & value)
+{
+    SetSample(sampleNumber, WavReader::Channel_e::CHANNEL_ONE, value);
+    return;
+} // SetSample
+
+std::uint32_t WavReader::DataSize(void)
+{
+    if ((mSubchunk1.mNumChannels != 0) && (mSubchunk1.mBitsPerSample != 0))
+    {
+        return mSubchunk2.mSubchunk2Size * 8 / (mSubchunk1.mNumChannels * mSubchunk1.mBitsPerSample);
+    } // if
+    else
+    {
+        return -1;
+    } // else
+} // GetChannelLength
