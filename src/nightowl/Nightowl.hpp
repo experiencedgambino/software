@@ -2,6 +2,7 @@
 #define NIGHTOWL_HPP
 
 #include "camera/WebCam.hpp"
+#include "configuration/Configuration.hpp"
 #include "imageproc/BackgroundSubtractor.hpp"
 #include "imageproc/MotionDetector.hpp"
 
@@ -11,26 +12,31 @@ public:
   Nightowl();
   ~Nightowl();
 
+  bool configure(const std::string & configurationFileName);
   bool run();
   bool stop();
 
 private:
   bool shipDetection(cv::Mat frame, std::time_t timestamp);
-  bool readConfigurationParameters();
-
-  static const std::string BACKGROUND_GENERATION_TIME_CONFIG;
-  static const std::string CONFIG_FILE_NAME;
+  bool readConfigurationParameters(const std::string & configurationFileName);
 
   bool mRunning {false};
   BackgroundSubtractor mBackgroundSubtractor;
   WebCam mCamera;
   MotionDetector mMotionDetector;
 
-  std::uint32_t mFrameIntervalWaitMillis {1000};
-
-  // Configured parameters
+  // Configuration parameter name
+  static const std::string CONF_NAME_BACKGROUND_GENERATION_TIME;
+  static const std::string CONF_NAME_BACKGROUND_GENERATION_IMAGE_WEIGHT;
+  static const std::string CONF_NAME_FRAME_INTERVAL_WAIT_MILLIS;
+  static const std::string CONF_NAME_IMAGE_SAVE_DIRECTORY;
+  static const std::string CONF_NAME_LOG_FILE_PATH;
+  // Configuration parameters
   int mBackgroundGenerationTime {1};
   float mBackgroundGenerationImageWeight {.1};
+  std::uint32_t mFrameIntervalWaitMillis {1000};
+  std::string mImageSaveDirectory {};
+  std::string mLogFilePath {};
 }; // Nightowl
 
 #endif // NIGHTOWL_HPP

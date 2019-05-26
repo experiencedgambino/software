@@ -4,10 +4,6 @@
 #include <chrono>
 #include <thread>
 
-
-const std::string Nightowl::BACKGROUND_GENERATION_TIME_CONFIG="BackgroundSubtractionTime";
-const std::string Nightowl::CONFIG_FILE_NAME="Nightowl.cfg";
-
 // Default constructor
 Nightowl::Nightowl()
 {
@@ -20,9 +16,10 @@ Nightowl::~Nightowl()
 } // ~Nightowl
 
 // Read the configuration
-bool Nightowl::readConfigurationParameters()
+bool Nightowl::readConfigurationParameters(const std::string & configurationFileName)
 {
-  return true;
+    bool return_value = true;
+    return return_value;
 } // readConfigurationParameters
 
 // Ship the detection to the server
@@ -32,10 +29,16 @@ bool Nightowl::shipDetection(cv::Mat frame, std::time_t timestamp)
   return result;
 } // ship_detection
 
+// Configure the app
+bool Nightowl::configure(const std::string & configurationFileName)
+{
+    bool return_value = true;
+    return return_value;
+} // configure
+
 // Run nightowl
 bool Nightowl::run()
 {
-  readConfigurationParameters();
   mRunning = true;
 
   if (mCamera.open() == 0)
@@ -96,5 +99,6 @@ bool Nightowl::run()
 // Stop the process
 bool stop()
 {
-
+  bool return_value = true;
+  return return_value;
 } // stop
