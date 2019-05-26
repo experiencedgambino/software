@@ -1,15 +1,22 @@
 #include "nightowl/Nightowl.hpp"
 
-int main()
+int main(int argc, char ** argv)
 {
   Nightowl * nightowlProcess = new Nightowl();
-
-  bool results = nightowlProcess->run();
-
-  if (!results)
+  int return_value = 0;
+  const int NUMBER_OF_TOTAL_ARGUMENTS = 2;
+  const int NIGHTOWL_CONFIGURATION_ARGUMENT = 1;
+  if (NUMBER_OF_TOTAL_ARGUMENTS == argc)
   {
-    return 1;
+    if (nightowlProcess->configure(argv[NIGHTOWL_CONFIGURATION_ARGUMENT]) == true)
+    {
+      return_value = nightowlProcess->run();
+    } // if
+    else
+    {
+      return_value = 1;
+    }
   } // if
 
-  return 0;
+  return return_value;
 } // main

@@ -21,9 +21,10 @@ private:
   bool readConfigurationParameters(const std::string & configurationFileName);
 
   bool mRunning {false};
-  BackgroundSubtractor mBackgroundSubtractor;
-  WebCam mCamera;
-  MotionDetector mMotionDetector;
+  BackgroundSubtractor mBackgroundSubtractor {};
+  WebCam mCamera {};
+  MotionDetector mMotionDetector {};
+  Configuration mConfiguration {};
 
   // Configuration parameter name
   static const std::string CONF_NAME_BACKGROUND_GENERATION_TIME;
