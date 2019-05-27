@@ -3,7 +3,6 @@
 
 #include <fstream>
 #include <sstream>
-#include <iostream>
 
 class Configuration
 {
@@ -80,30 +79,6 @@ inline bool Configuration::parseConfig(const std::string & configPath)
 
     return return_value;
 } // parseConfig
-
-// Read configration parameter into vector of all instances
-template <typename T>
-inline bool Configuration::readParameter(const std::string & configurationParameterName, std::vector<T> & configurationParameterStore)
-{
-    bool return_value = false;
-    configurationParameterStore.clear();
-    std::vector<std::pair<std::string, std::string>>::iterator parameter;
-    for (parameter = configurationParameterVector.begin(); parameter != configurationParameterVector.end(); ++parameter)
-    {
-        if (parameter->first == configurationParameterName)
-        {
-            mParameterStringStream.str(parameter->second);
-            configurationParameterStore.emplace_back();
-            mParameterStringStream >> configurationParameterStore.back();
-            return_value = true;
-        } // if
-        else
-        {
-            // Parameter not found, do nothing.
-        } // else
-    } // for
-    return return_value;
-} // readParameter
 
 // Read configuration parameter into object
 template <typename T>
