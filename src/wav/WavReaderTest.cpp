@@ -14,16 +14,16 @@ int main(int argc, char ** argv)
     for (std::uint32_t counter = 0; counter < reader.DataSize() - differential_value; ++counter)
     {
         if (counter < 100)
-            std::cout << "Both: (" << reader.GetSample(counter, WavReader::Channel_e::CHANNEL_ONE) << ", " << reader.GetSample(counter+differential_value, WavReader::Channel_e::CHANNEL_ONE) << std::endl;
+                std::cout << "Both: (" << reader.GetSample(counter, WavReader::Channel_e::CHANNEL_ONE) << ", " << reader.GetSample(counter+differential_value, WavReader::Channel_e::CHANNEL_ONE) << std::endl;
         sumValue = 0;
         sumValue = ((std::int32_t) reader.GetSample(counter, WavReader::Channel_e::CHANNEL_ONE)
-                 +  (std::int32_t) reader.GetSample(counter+differential_value, WavReader::Channel_e::CHANNEL_ONE)) / 2.0;
+                         +  (std::int32_t) reader.GetSample(counter+differential_value, WavReader::Channel_e::CHANNEL_ONE)) / 2.0;
         reader.SetSample(counter, WavReader::Channel_e::CHANNEL_ONE, sumValue);
         if (counter < 100)
             std::cout << "Baft: (" << reader.GetSample(counter, WavReader::Channel_e::CHANNEL_ONE) << ", " << reader.GetSample(counter+differential_value, WavReader::Channel_e::CHANNEL_ONE) << std::endl;
         sumValue = 0;
         sumValue = ((std::int32_t) reader.GetSample(counter+differential_value, WavReader::Channel_e::CHANNEL_TWO)
-                 +  (std::int32_t) reader.GetSample(counter, WavReader::Channel_e::CHANNEL_TWO)) / 2.0;
+                         +  (std::int32_t) reader.GetSample(counter, WavReader::Channel_e::CHANNEL_TWO)) / 2.0;
         reader.SetSample(counter, WavReader::Channel_e::CHANNEL_TWO, sumValue);
     } // for
 

@@ -14,8 +14,8 @@ bool WebCam::open()
 {
     mCapture = new cv::VideoCapture(0);
     if (!mCapture->isOpened())
-        return 0;
-    return 1;
+        return false;
+    return true;
 } // open
 
 bool WebCam::close()

@@ -9,6 +9,7 @@ const std::string Nightowl::CONF_NAME_BACKGROUND_GENERATION_IMAGE_WEIGHT = "Back
 const std::string Nightowl::CONF_NAME_FRAME_INTERVAL_WAIT_MILLIS = "FrameIntervalWaitMillis";
 const std::string Nightowl::CONF_NAME_IMAGE_SAVE_DIRECTORY = "ImageSaveDirectory";
 const std::string Nightowl::CONF_NAME_LOG_FILE_PATH = "LogFilePath";
+const std::string Nightowl::CONF_NAME_VERBOSE_MODE = "VerboseMode";
 
 // Default constructor
 Nightowl::Nightowl()
@@ -27,16 +28,46 @@ bool Nightowl::readConfigurationParameters(const std::string & configurationFile
     bool return_value = true;
     if (mConfiguration.parseConfig(configurationFileName) == true)
     {
-      // Read background generation time
-      if (mConfiguration.readParameter(CONF_NAME_BACKGROUND_GENERATION_TIME, mBackgroundGenerationTime) == false)
-      {
-        return_value = false;
-      } // if
-      
+        // Read background generation time
+        if (mConfiguration.readParameter(CONF_NAME_BACKGROUND_GENERATION_TIME, mBackgroundGenerationTime) == false)
+        {
+            return_value = false;
+        } // if
+
+        // Read background generation image weight
+        if (mConfiguration.readParameter(CONF_NAME_BACKGROUND_GENERATION_IMAGE_WEIGHT, mBackgroundGenerationImageWeight) == false)
+        {
+            return_value = false;
+        } // if
+
+        // Read frame interval wait, in milliseconds
+        if (mConfiguration.readParameter(CONF_NAME_FRAME_INTERVAL_WAIT_MILLIS, mFrameIntervalWaitMillis) == false)
+        {
+            return_value = false;
+        } // if
+
+        // Read image save directory
+        if (mConfiguration.readParameter(CONF_NAME_IMAGE_SAVE_DIRECTORY, mImageSaveDirectory) == false)
+        {
+            return_value = false;
+        } // if
+
+        // Read image save directory
+        if (mConfiguration.readParameter(CONF_NAME_LOG_FILE_PATH, mLogFilePath) == false)
+        {
+            return_value = false;
+        } // if
+
+        // Read verbose mode
+        if (mConfiguration.readParameter(CONF_NAME_VERBOSE_MODE, mVerboseMode) == false)
+        {
+            return_value = false;
+        } // if
+
     } // if
     else
     {
-      return_value = false;
+        return_value = false;
     } // else
     return return_value;
 } // readConfigurationParameters
@@ -44,8 +75,13 @@ bool Nightowl::readConfigurationParameters(const std::string & configurationFile
 // Ship the detection to the server
 bool Nightowl::shipDetection(cv::Mat frame, std::time_t timestamp)
 {
-  bool result = cv::imwrite( "./images/" + std::to_string(timestamp) + ".jpg", frame );
-  return result;
+    std::string full_image_save_file = mImageSaveDirectory + "/" + std::to_string(timestamp) + ".jpg";
+    if (mVerboseMode == true)
+    {
+        std::cout << "Nightowl::" << std::string(__func__) << ": Saving to " << full_image_save_file << std::endl;
+    } // if
+    bool result = cv::imwrite( full_image_save_file, frame );
+    return result;
 } // ship_detection
 
 // Configure the app
@@ -54,11 +90,11 @@ bool Nightowl::configure(const std::string & configurationFileName)
     bool return_value = true;
     if (readConfigurationParameters(configurationFileName) == true)
     {
-      // Success
+        // Success
     }
     else
     {
-      return_value = false;
+        return_value = false;
     } // else
     return return_value;
 } // configure
@@ -66,66 +102,66 @@ bool Nightowl::configure(const std::string & configurationFileName)
 // Run nightowl
 bool Nightowl::run()
 {
-  mRunning = true;
+    mRunning = true;
 
-  if (mCamera.open() == 0)
-  {
-    std::cerr << "Cannot open camera. Error" << std::endl;
-    return 0;
-  } // if
-  else
-  {
-    // Generate
-    cv::Mat currentFrame;
-    cv::Mat grayFrame;
-    currentFrame = mCamera.getFrame();
-    cv::cvtColor(currentFrame, grayFrame, cv::COLOR_BGR2GRAY);
-    mBackgroundSubtractor.resetBackground(grayFrame);
-
-    std::time_t start = std::time(nullptr);
-    for (;mRunning == true;)
+    if (mCamera.open() == false)
     {
-      currentFrame = mCamera.getFrame();
-      mBackgroundSubtractor.addFrame(currentFrame, mBackgroundGenerationImageWeight); // Add a frame to the background subtractor
-      if (std::time(nullptr) - start > mBackgroundGenerationTime)
-      {
-        break;
-      } // if
-    } // for
-
-    // cv::namedWindow("MotionDetector", 1);
-    // Motion detect
-    cv::Mat frame;
-    std::uint32_t count = 0;
-    for (;mRunning == true;)
+        std::cerr << "Cannot open camera. Error" << std::endl;
+        return false;
+    } // if
+    else
     {
-      frame = mCamera.getFrame();
-      bool motion_detected = mMotionDetector.detect(frame, mBackgroundSubtractor.getBackground());
-      // cv::imshow("MotionDetector", mMotionDetector.mFrameOfInterest);
-      // if (cv::waitKey(30) > 0) break;
-      if (motion_detected)
-      {
-          std::time_t timestamp = std::time(nullptr);
-          bool result = shipDetection(frame, timestamp);
-          if (result == false)
-          {
-            std::cerr << "Cannot write image to file. Error" << std::endl;
-          } // if
-      } // if
-      std::this_thread::sleep_for(std::chrono::milliseconds(mFrameIntervalWaitMillis));
-      count++;
-      mBackgroundSubtractor.addFrame(frame, .2); // Add a frame to the background subtractor
-    } // for
-  } // if
+        // Generate
+        cv::Mat currentFrame;
+        cv::Mat grayFrame;
+        currentFrame = mCamera.getFrame();
+        cv::cvtColor(currentFrame, grayFrame, cv::COLOR_BGR2GRAY);
+        mBackgroundSubtractor.resetBackground(grayFrame);
 
-  mCamera.close();
+        std::time_t start = std::time(nullptr);
+        for (;mRunning == true;)
+        {
+            currentFrame = mCamera.getFrame();
+            mBackgroundSubtractor.addFrame(currentFrame, mBackgroundGenerationImageWeight); // Add a frame to the background subtractor
+            if (std::time(nullptr) - start > mBackgroundGenerationTime)
+            {
+                break;
+            } // if
+        } // for
 
-  return true;
+        // cv::namedWindow("MotionDetector", 1);
+        // Motion detect
+        cv::Mat frame;
+        std::uint32_t count = 0;
+        for (;mRunning == true;)
+        {
+            frame = mCamera.getFrame();
+            bool motion_detected = mMotionDetector.detect(frame, mBackgroundSubtractor.getBackground());
+            // cv::imshow("MotionDetector", mMotionDetector.mFrameOfInterest);
+            // if (cv::waitKey(30) > 0) break;
+            if (motion_detected)
+            {
+                    std::time_t timestamp = std::time(nullptr);
+                    bool result = shipDetection(frame, timestamp);
+                    if (result == false)
+                    {
+                        std::cerr << "Cannot write image to file. Error" << std::endl;
+                    } // if
+            } // if
+            std::this_thread::sleep_for(std::chrono::milliseconds(mFrameIntervalWaitMillis));
+            count++;
+            mBackgroundSubtractor.addFrame(frame, mBackgroundGenerationImageWeight); // Add a frame to the background subtractor
+        } // for
+    } // if
+
+    mCamera.close();
+
+    return true;
 } // run
 
 // Stop the process
 bool stop()
 {
-  bool return_value = true;
-  return return_value;
+    bool return_value = true;
+    return return_value;
 } // stop

@@ -37,8 +37,6 @@ private:
     std::uint16_t SwapEndian(const std::uint16_t & num);
     std::uint32_t SwapEndian(const std::uint32_t & num);
 
-
-
     // Wave structure fields
     struct WavHeader_s
     {
@@ -98,7 +96,6 @@ private:
     static const char WAVE_VALIDATE_STRING[5];
     static const char DATA_VALIDATE_STRING[5];
     static const char FORMAT_VALIDATE_STRING[5];
-
 
 }; // WavReader
 

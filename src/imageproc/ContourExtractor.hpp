@@ -4,8 +4,8 @@
 class ContourExtractor
 {
 public:
-  // Default constructor
-  ContourExtractor();
+	// Default constructor
+	ContourExtractor();
 
 
 
