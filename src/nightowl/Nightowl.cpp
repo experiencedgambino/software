@@ -114,14 +114,14 @@ bool Nightowl::run()
         // Generate
         cv::Mat currentFrame;
         cv::Mat grayFrame;
-        currentFrame = mCamera.getFrame();
+        mCamera.getFrame(currentFrame);
         cv::cvtColor(currentFrame, grayFrame, cv::COLOR_BGR2GRAY);
         mBackgroundSubtractor.resetBackground(grayFrame);
 
         std::time_t start = std::time(nullptr);
         for (;mRunning == true;)
         {
-            currentFrame = mCamera.getFrame();
+            mCamera.getFrame(currentFrame);
             mBackgroundSubtractor.addFrame(currentFrame, mBackgroundGenerationImageWeight); // Add a frame to the background subtractor
             if (std::time(nullptr) - start > mBackgroundGenerationTime)
             {
@@ -135,7 +135,7 @@ bool Nightowl::run()
         std::uint32_t count = 0;
         for (;mRunning == true;)
         {
-            frame = mCamera.getFrame();
+            mCamera.getFrame(frame);
             bool motion_detected = mMotionDetector.detect(frame, mBackgroundSubtractor.getBackground());
             // cv::imshow("MotionDetector", mMotionDetector.mFrameOfInterest);
             // if (cv::waitKey(30) > 0) break;
