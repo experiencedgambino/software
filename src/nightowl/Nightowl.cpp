@@ -145,7 +145,7 @@ bool Nightowl::run()
                     bool result = shipDetection(frame, timestamp);
                     if (result == false)
                     {
-                        std::cerr << "Cannot write image to file. Error" << std::endl;
+                        std::cerr << "Cannot process detection. Error" << std::endl;
                     } // if
             } // if
             std::this_thread::sleep_for(std::chrono::milliseconds(mFrameIntervalWaitMillis));
