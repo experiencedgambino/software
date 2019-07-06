@@ -129,7 +129,7 @@ bool Nightowl::run()
             } // if
         } // for
 
-        // cv::namedWindow("MotionDetector", 1);
+        //cv::namedWindow("MotionDetector", 1);
         // Motion detect
         cv::Mat frame;
         std::uint32_t count = 0;
@@ -137,8 +137,8 @@ bool Nightowl::run()
         {
             mCamera.getFrame(frame);
             bool motion_detected = mMotionDetector.detect(frame, mBackgroundSubtractor.getBackground());
-            // cv::imshow("MotionDetector", mMotionDetector.mFrameOfInterest);
-            // if (cv::waitKey(30) > 0) break;
+            //cv::imshow("MotionDetector", mMotionDetector.mFrameOfInterest);
+            //if (cv::waitKey(30) > 0) break;
             if (motion_detected)
             {
                     std::time_t timestamp = std::time(nullptr);

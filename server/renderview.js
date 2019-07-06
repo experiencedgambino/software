@@ -1,5 +1,5 @@
 // Requires
-var fs = require("fs");
+var fs = require('fs');
 var path = require('path');
 
 // Variables
@@ -56,9 +56,19 @@ function process(req, res)
     else if (req.url.match("\.jpg"))
     {
         var imagePath = req.url;
-        var fileStream = fs.createReadStream(imagePath);
-        res.writeHead(200, jpgHeader);
-        fileStream.pipe(res);
+        // Make sure file exists before opening stream
+        if (fs.existsSync(imagePath) == true)
+        {
+            var fileStream = fs.createReadStream(imagePath).on('error', function(e){e.message;});
+            res.writeHead(200, jpgHeader);
+            fileStream.pipe(res).on('error', function(e){e.message;});
+        } // if
+        else
+        {
+            res.writeHead(404, {"Content-Type": "text/html"});
+            res.end("No Page Found");
+        } // else
+
     } // if
     else{
         res.writeHead(404, {"Content-Type": "text/html"});

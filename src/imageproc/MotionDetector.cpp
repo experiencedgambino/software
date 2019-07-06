@@ -5,7 +5,7 @@ MotionDetector::MotionDetector()
 
 } // MotionDetector
 
-bool MotionDetector::detect(cv::Mat frame, cv::Mat reference)
+bool MotionDetector::detect(const cv::Mat & frame, const cv::Mat & reference)
 {
     double contour_area;
 
@@ -34,7 +34,7 @@ bool MotionDetector::detect(cv::Mat frame, cv::Mat reference)
         if (contour_area > mAreaThreshold)
         {
             return true;
-        }
+        } // if
     } // for
 
     return false;

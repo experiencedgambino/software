@@ -14,7 +14,7 @@ public:
     ~WebCam();
 
     // Camera:getFrame
-    cv::Mat getFrame();
+    bool getFrame(cv::Mat & frame);
 
     // Camera:open
     bool open();

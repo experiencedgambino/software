@@ -7,7 +7,7 @@ class Camera
 {
 public:
     // Grabs the next frame
-    virtual cv::Mat getFrame() = 0;
+    virtual bool getFrame(cv::Mat & frame) = 0;
 
     // Initializes the camera
     virtual bool open() = 0;

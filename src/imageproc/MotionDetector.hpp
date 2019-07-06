@@ -10,13 +10,11 @@ class MotionDetector
 public:
     MotionDetector();
 
-    bool detect(cv::Mat frame, cv::Mat reference);
+    bool detect(const cv::Mat & frame, const cv::Mat & reference);
 
     cv::Mat mFrameOfInterest;
 private:
-
-    bool mAreaThreshold;
-
+    double mAreaThreshold {10000.0};
 
 };
 

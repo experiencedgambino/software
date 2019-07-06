@@ -23,9 +23,8 @@ bool WebCam::close()
     delete mCapture;
 } // close
 
-cv::Mat WebCam::getFrame()
+bool WebCam::getFrame(cv::Mat & frame)
 {
-    cv::Mat frame;
     *mCapture >> frame; // get a new frame from the camera
-    return frame;
+    return true;
 } // getFrame
