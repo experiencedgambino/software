@@ -135,22 +135,28 @@ bool Nightowl::run()
         std::uint32_t count = 0;
         for (;mRunning == true;)
         {
-            mCamera.getFrame(frame);
-            bool motion_detected = mMotionDetector.detect(frame, mBackgroundSubtractor.getBackground());
-            //cv::imshow("MotionDetector", mMotionDetector.mFrameOfInterest);
-            //if (cv::waitKey(30) > 0) break;
-            if (motion_detected)
+            if (mCamera.getFrame(frame) == true)
             {
-                    std::time_t timestamp = std::time(nullptr);
-                    bool result = shipDetection(frame, timestamp);
-                    if (result == false)
-                    {
-                        std::cerr << "Cannot process detection. Error" << std::endl;
-                    } // if
+                bool motion_detected = mMotionDetector.detect(frame, mBackgroundSubtractor.getBackground());
+                //cv::imshow("MotionDetector", mMotionDetector.mFrameOfInterest);
+                //if (cv::waitKey(30) > 0) break;
+                if (motion_detected)
+                {
+                        std::time_t timestamp = std::time(nullptr);
+                        bool result = shipDetection(frame, timestamp);
+                        if (result == false)
+                        {
+                            std::cerr << "ERROR: Cannot process detection." << std::endl;
+                        } // if
+                } // if
+                std::this_thread::sleep_for(std::chrono::milliseconds(mFrameIntervalWaitMillis));
+                count++;
+                mBackgroundSubtractor.addFrame(frame, mBackgroundGenerationImageWeight); // Add a frame to the background subtractor
             } // if
-            std::this_thread::sleep_for(std::chrono::milliseconds(mFrameIntervalWaitMillis));
-            count++;
-            mBackgroundSubtractor.addFrame(frame, mBackgroundGenerationImageWeight); // Add a frame to the background subtractor
+            else
+            {
+                std::cerr << "ERROR: Failed to retrieve frame from video capture device." << std::endl;
+            } // else
         } // for
     } // if
 
